@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPS Scorecard — August 2026</title>
+<style>
+  :root {
+    --green-dark:#5A0808; --green-mid:#991010; --green-light:#CC2229;
+    --gold:#F5C300; --gold-light:#FFE566; --white:#ffffff;
+    --off-white:#FFF8F5; --gray-light:#eae8e3; --gray-mid:#b0a898;
+    --text-dark:#1a1a1a; --text-mid:#444; --red:#8B0000; --calc-bg:#FFFDE8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:var(--off-white);color:var(--text-dark);min-height:100vh;}
+  .header{background:linear-gradient(135deg,#1a1a1a 0%,#4A0808 100%);color:var(--white);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:3px solid var(--gold);}
+  .header h1{font-size:20px;font-weight:700;color:var(--gold-light);}
+  .header .subtitle{font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px;letter-spacing:0.8px;text-transform:uppercase;}
+  .btn{padding:7px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
+  .btn-ghost{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.25);}
+  .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+  .sc-type-bar{background:var(--green-dark);padding:0 32px;display:flex;gap:0;border-bottom:2px solid var(--gold);}
+  .sc-tab{padding:11px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.15s;letter-spacing:0.3px;}
+  .sc-tab:hover{color:var(--gold-light);}
+  .sc-tab.active{color:var(--gold-light);border-bottom-color:var(--gold);}
+  .tab-bar{background:var(--white);border-bottom:2px solid var(--gray-light);padding:0 32px;display:flex;align-items:flex-end;gap:2px;overflow-x:auto;}
+  .tab{padding:11px 20px;font-size:13px;font-weight:600;color:var(--gray-mid);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.15s;letter-spacing:0.3px;}
+  .tab:hover{color:var(--green-light);}
+  .tab.active{color:var(--green-dark);border-bottom-color:var(--green-light);}
+  .tab.mtd-tab.active{color:#7a5c00;border-bottom-color:var(--gold);}
+  .tab-date{font-size:11px;font-weight:400;color:var(--gray-mid);margin-top:2px;}
+  .tab.active .tab-date{color:var(--green-mid);}
+  .tab.mtd-tab.active .tab-date{color:#b08020;}
+  .mtd-badge{background:var(--gold);color:#1a1a1a;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;}
+  .content{padding:22px 32px;}
+  .period-label{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .period-label h2{font-size:16px;font-weight:700;color:var(--green-mid);}
+  .period-label .period-sub{font-size:12px;color:var(--gray-mid);}
+  .mtd-pill{background:var(--gold);color:#1a1a1a;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;}
+  .formula-bar{background:var(--white);border:1px solid var(--gray-light);border-radius:8px;padding:9px 16px;margin-bottom:16px;font-size:13px;color:var(--text-mid);}
+  .formula-bar strong{color:var(--green-mid);font-size:12px;letter-spacing:0.5px;text-transform:uppercase;margin-right:8px;}
+  .table-wrap{background:var(--white);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,0.07);overflow:hidden;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:700px;}
+  thead tr.col-header{background:var(--green-dark);}
+  thead tr.col-header th{padding:12px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.85);text-align:center;border-right:1px solid rgba(255,255,255,0.1);white-space:nowrap;letter-spacing:0.3px;}
+  thead tr.col-header th:first-child{text-align:left;min-width:160px;color:var(--gold-light);}
+  thead tr.col-header th.calc-head{background:rgba(245,195,0,0.25);}
+  thead tr.col-header th.err-head{background:rgba(192,57,43,0.3);color:rgba(255,200,190,0.9);}
+  thead tr.col-header th.warn-head{background:rgba(180,120,0,0.35);color:rgba(255,230,150,0.9);}
+  thead tr.col-header th.good-head{background:rgba(0,120,60,0.35);color:rgba(180,255,200,0.9);}
+  tbody tr{border-bottom:1px solid var(--gray-light);transition:background 0.1s;}
+  tbody tr:hover{background:#FFF5F5;}
+  td{padding:10px 13px;font-size:13px;text-align:center;border-right:1px solid var(--gray-light);vertical-align:middle;}
+  td.name-cell{text-align:left;font-weight:600;border-right:2px solid var(--gray-light);}
+  td.num-cell{font-weight:500;color:var(--text-mid);}
+  td.num-cell.zero{color:#ccc;}
+  td.calc-cell{background:var(--calc-bg);font-weight:700;color:#7A5C00;}
+  td.err-cell{background:#fdf0ee;font-weight:700;color:var(--red);}
+  td.warn-cell{background:#fdf8ee;font-weight:700;color:#7a5c00;}
+  td.good-cell{background:#edfaf3;font-weight:700;color:#1a6a3e;}
+  td.na-cell{color:#bbb;font-style:italic;font-size:12px;}
+  tfoot tr{background:var(--green-dark)!important;border-top:2px solid var(--gold);}
+  tfoot td{padding:10px 13px;color:rgba(255,255,255,0.9);font-weight:700;border-right-color:rgba(255,255,255,0.1);}
+  tfoot td.name-cell{color:var(--gold-light);font-size:12px;letter-spacing:0.8px;text-transform:uppercase;border-right-color:rgba(255,255,255,0.2);}
+  tfoot td.calc-cell{background:rgba(245,195,0,0.2);color:var(--gold-light);}
+  tfoot td.err-cell{background:rgba(192,57,43,0.25);color:#ffb3aa;}
+  tfoot td.good-cell{background:rgba(0,120,60,0.2);color:rgba(160,255,190,0.9);}
+  .scorecard-section{display:none;}
+  .scorecard-section.active{display:block;}
+  .no-data{text-align:center;color:var(--gray-mid);padding:48px 24px;font-style:italic;font-size:14px;background:var(--white);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,0.07);}
+  .vault-balanced-yes{color:#1a6a3e;font-weight:700;}
+  .vault-balanced-no{color:var(--red);font-weight:700;}
+  .vault-balanced-partial{color:#8a6000;font-weight:700;}
+  @media print{
+    .header .btn,.sc-type-bar,.tab-bar,.formula-bar{display:none!important;}
+    .content{padding:8px;}
+    body{background:white;}
+    .header,thead tr.col-header,tfoot tr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  .hit{background:rgba(76,175,80,0.16)!important;}
+  .bonus-cell{font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:20px;">
+    <img src="data:image/png;base64,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" alt="Lucky Lincoln Gaming" style="height:54px;display:block;">
+    <div>
+      <h1>OPS Scorecard</h1>
+      <div class="subtitle">Operations &nbsp;·&nbsp; August 2026</div>
+    </div>
+  </div>
+  <button class="btn btn-ghost" onclick="window.print()">Print / PDF</button>
+</div>
+
+<div class="sc-type-bar">
+  <button class="sc-tab active" onclick="selectScorecard('collector',this)">Collector</button>
+  <button class="sc-tab" onclick="selectScorecard('vault',this)">Vault</button>
+  <button class="sc-tab" onclick="selectScorecard('technician',this)">Technician</button>
+  <button class="sc-tab" onclick="selectScorecard('project',this)">Project</button>
+  <button class="sc-tab" onclick="selectScorecard('callcenter',this)">Call Center</button>
+  <button class="sc-tab" onclick="selectScorecard('lastaudit',this)">Last Audit</button>
+</div>
+
+<div id="sc-collector" class="scorecard-section active">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectPeriod('collector',0,this)">Week 1<br><span class="tab-date">Aug 3–9</span></button>
+    <button class="tab" onclick="selectPeriod('collector',1,this)">Week 2<br><span class="tab-date">Aug 10–16</span></button>
+    <button class="tab" onclick="selectPeriod('collector',2,this)">Week 3<br><span class="tab-date">Aug 17–23</span></button>
+    <button class="tab" onclick="selectPeriod('collector',3,this)">Week 4<br><span class="tab-date">Aug 24–30</span></button>
+    <button class="tab" onclick="selectPeriod('collector',4,this)">Week 5<br><span class="tab-date">Aug 31–Sep 6</span></button>
+    <button class="tab mtd-tab" onclick="selectPeriod('collector',5,this)">Aug MTD<span class="mtd-badge">&#8721;</span><br><span class="tab-date">Aug 1–31</span></button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="coll-title">Week 1</h2>
+      <span class="period-sub" id="coll-sub">Aug 3–9, 2026</span>
+      <span class="mtd-pill" id="coll-mtd" style="display:none;">Month-to-Date Total</span>
+    </div>
+    <div id="coll-body"></div>
+  </div>
+</div>
+
+<div id="sc-vault" class="scorecard-section">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectPeriod('vault',0,this)">Week 1<br><span class="tab-date">Aug 3–9</span></button>
+    <button class="tab" onclick="selectPeriod('vault',1,this)">Week 2<br><span class="tab-date">Aug 10–16</span></button>
+    <button class="tab" onclick="selectPeriod('vault',2,this)">Week 3<br><span class="tab-date">Aug 17–23</span></button>
+    <button class="tab" onclick="selectPeriod('vault',3,this)">Week 4<br><span class="tab-date">Aug 24–30</span></button>
+    <button class="tab" onclick="selectPeriod('vault',4,this)">Week 5<br><span class="tab-date">Aug 31–Sep 6</span></button>
+    <button class="tab mtd-tab" onclick="selectPeriod('vault',5,this)">Aug MTD<span class="mtd-badge">&#8721;</span><br><span class="tab-date">Aug 1–31</span></button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="vault-title">Week 1</h2>
+      <span class="period-sub" id="vault-sub">Aug 3–9, 2026</span>
+      <span class="mtd-pill" id="vault-mtd" style="display:none;">Month-to-Date Total</span>
+    </div>
+    <div id="vault-body"></div>
+  </div>
+</div>
+
+<div id="sc-technician" class="scorecard-section">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectPeriod('technician',0,this)">Week 1<br><span class="tab-date">Aug 3–9</span></button>
+    <button class="tab" onclick="selectPeriod('technician',1,this)">Week 2<br><span class="tab-date">Aug 10–16</span></button>
+    <button class="tab" onclick="selectPeriod('technician',2,this)">Week 3<br><span class="tab-date">Aug 17–23</span></button>
+    <button class="tab" onclick="selectPeriod('technician',3,this)">Week 4<br><span class="tab-date">Aug 24–30</span></button>
+    <button class="tab" onclick="selectPeriod('technician',4,this)">Week 5<br><span class="tab-date">Aug 31–Sep 6</span></button>
+    <button class="tab mtd-tab" onclick="selectPeriod('technician',5,this)">Aug MTD<span class="mtd-badge">&#8721;</span><br><span class="tab-date">Aug 1–31</span></button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="tech-title">Week 1</h2>
+      <span class="period-sub" id="tech-sub">Aug 3–9, 2026</span>
+      <span class="mtd-pill" id="tech-mtd" style="display:none;">Month-to-Date Total</span>
+    </div>
+    <div id="tech-body"></div>
+  </div>
+</div>
+
+<div id="sc-project" class="scorecard-section">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectPeriod('project',0,this)">Week 1<br><span class="tab-date">Aug 3–9</span></button>
+    <button class="tab" onclick="selectPeriod('project',1,this)">Week 2<br><span class="tab-date">Aug 10–16</span></button>
+    <button class="tab" onclick="selectPeriod('project',2,this)">Week 3<br><span class="tab-date">Aug 17–23</span></button>
+    <button class="tab" onclick="selectPeriod('project',3,this)">Week 4<br><span class="tab-date">Aug 24–30</span></button>
+    <button class="tab" onclick="selectPeriod('project',4,this)">Week 5<br><span class="tab-date">Aug 31–Sep 6</span></button>
+    <button class="tab mtd-tab" onclick="selectPeriod('project',5,this)">Aug MTD<span class="mtd-badge">&#8721;</span><br><span class="tab-date">Aug 1–31</span></button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="proj-title">Week 1</h2>
+      <span class="period-sub" id="proj-sub">Aug 3–9, 2026</span>
+      <span class="mtd-pill" id="proj-mtd" style="display:none;">Month-to-Date Total</span>
+    </div>
+    <div id="proj-body"></div>
+  </div>
+</div>
+
+<div id="sc-callcenter" class="scorecard-section">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectPeriod('callcenter',0,this)">Week 1<br><span class="tab-date">Aug 3–9</span></button>
+    <button class="tab" onclick="selectPeriod('callcenter',1,this)">Week 2<br><span class="tab-date">Aug 10–16</span></button>
+    <button class="tab" onclick="selectPeriod('callcenter',2,this)">Week 3<br><span class="tab-date">Aug 17–23</span></button>
+    <button class="tab" onclick="selectPeriod('callcenter',3,this)">Week 4<br><span class="tab-date">Aug 24–30</span></button>
+    <button class="tab" onclick="selectPeriod('callcenter',4,this)">Week 5<br><span class="tab-date">Aug 31–Sep 6</span></button>
+    <button class="tab mtd-tab" onclick="selectPeriod('callcenter',5,this)">Aug MTD<span class="mtd-badge">&#8721;</span><br><span class="tab-date">Aug 1–31</span></button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="cc-title">Week 1</h2>
+      <span class="period-sub" id="cc-sub">Aug 3–9, 2026</span>
+      <span class="mtd-pill" id="cc-mtd" style="display:none;">Month-to-Date Total</span>
+    </div>
+    <div id="cc-body"></div>
+  </div>
+</div>
+
+<!-- ════ LAST AUDIT ════ -->
+<div id="sc-lastaudit" class="scorecard-section">
+  <div class="tab-bar">
+    <button class="tab active" onclick="selectRegion('All',this)">All Regions</button>
+    <button class="tab" onclick="selectRegion('Northern',this)">Northern</button>
+    <button class="tab" onclick="selectRegion('Central',this)">Central</button>
+    <button class="tab" onclick="selectRegion('Southern',this)">Southern</button>
+    <button class="tab mtd-tab" onclick="selectRegion('Summary',this)">Summary</button>
+  </div>
+  <div class="content">
+    <div class="period-label">
+      <h2 id="la-title">Last Audit &mdash; All Regions</h2>
+      <span class="period-sub" id="la-sub"></span>
+    </div>
+    <div id="la-body"></div>
+  </div>
+</div>
+
+<script>
+const PLABELS = ['Week 1','Week 2','Week 3','Week 4','Week 5','August MTD'];
+const PSUBS   = ['Aug 3\u20139, 2026','Aug 10\u201316, 2026','Aug 17\u201323, 2026','Aug 24\u201330, 2026','Aug 31\u2013Sep 6, 2026','Aug 1\u201331, 2026'];
+const periods = {collector:0,vault:0,technician:0,project:0,callcenter:0};
+
+function n(v){return (v===null||v===undefined)?'\u2014':Number(v).toLocaleString();}
+function pct(v,d=1){return (v===null||v===undefined)?'\u2014':(v*100).toFixed(d)+'%';}
+function num1(v){return (v===null||v===undefined)?'\u2014':(Number.isInteger(v)?v:Number(v).toFixed(1));}
+function zc(v){return (!v)?' zero':'';}
+function noData(el){el.innerHTML='<div class="no-data">No data recorded for this period</div>';}
+function updatePeriodLabel(pfx,p){
+  document.getElementById(pfx+'-title').textContent=PLABELS[p];
+  document.getElementById(pfx+'-sub').textContent=PSUBS[p];
+  const pill=document.getElementById(pfx+'-mtd'); if(pill) pill.style.display=p===5?'':'none';
+}
+
+// August seeds: uniform {name, wk:[w1..w5], mtd} — each period is [m1,m2,m3,m4] or null
+const COLL_SEED = [
+  {name:"Alex Martinez",wk:[null,null,null,null,null],mtd:null},
+  {name:"Andres Duenas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Andrew Hidenburg",wk:[null,null,null,null,null],mtd:null},
+  {name:"Andrew Rominger",wk:[null,null,null,null,null],mtd:null},
+  {name:"Brandon York",wk:[null,null,null,null,null],mtd:null},
+  {name:"Brent Hendricks",wk:[null,null,null,null,null],mtd:null},
+  {name:"Cesar Resendiz",wk:[null,null,null,null,null],mtd:null},
+  {name:"Craig Mueller",wk:[null,null,null,null,null],mtd:null},
+  {name:"Damon Dziekan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Daniel Falkenberg",wk:[null,null,null,null,null],mtd:null},
+  {name:"Daron Murphy",wk:[null,null,null,null,null],mtd:null},
+  {name:"Dennis Murray",wk:[null,null,null,null,null],mtd:null},
+  {name:"Earl Baker",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ernest Stone",wk:[null,null,null,null,null],mtd:null},
+  {name:"Gerardo Calenda",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ian Sullivan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jacob Irizarry",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jakub Kmiecik",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jason Lane",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jim Emberton",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jimmy Girardi",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joel Argueta",wk:[null,null,null,null,null],mtd:null},
+  {name:"John Broderick",wk:[null,null,null,null,null],mtd:null},
+  {name:"John Dubick",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jonathan Cruz",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joshua Burton",wk:[null,null,null,null,null],mtd:null},
+  {name:"Juan Payan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Kurt Grunden",wk:[null,null,null,null,null],mtd:null},
+  {name:"Liam Mulchrone",wk:[null,null,null,null,null],mtd:null},
+  {name:"Luke Hughes",wk:[null,null,null,null,null],mtd:null},
+  {name:"Manuel Vargas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Mark Minnis",wk:[null,null,null,null,null],mtd:null},
+  {name:"Mathew Moreland",wk:[null,null,null,null,null],mtd:null},
+  {name:"Michael Binstein",wk:[null,null,null,null,null],mtd:null},
+  {name:"Nathaniel Knudtson",wk:[null,null,null,null,null],mtd:null},
+  {name:"Naveen Bobba",wk:[null,null,null,null,null],mtd:null},
+  {name:"Randy Morlan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Richard Berrios",wk:[null,null,null,null,null],mtd:null},
+  {name:"Robert Doyle",wk:[null,null,null,null,null],mtd:null},
+  {name:"Robert McKinney",wk:[null,null,null,null,null],mtd:null},
+  {name:"Roberto Irizarry",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ryan Kelly",wk:[null,null,null,null,null],mtd:null},
+  {name:"Steve Frey",wk:[null,null,null,null,null],mtd:null},
+  {name:"Steve Thomas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Tommy Deshazer",wk:[null,null,null,null,null],mtd:null},
+  {name:"Trey Shartzer",wk:[null,null,null,null,null],mtd:null},
+  {name:"Troy Hancock",wk:[null,null,null,null,null],mtd:null}
+];
+const VAULT_SEED = [
+  {name:"Brian Treptow",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ana Martinez",wk:[null,null,null,null,null],mtd:null},
+  {name:"Chris Pope",wk:[null,null,null,null,null],mtd:null},
+  {name:"Randy Morlan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joel Argueta",wk:[null,null,null,null,null],mtd:null},
+  {name:"Trichelle Thomas",wk:[null,null,null,null,null],mtd:null}
+];
+const TECH_SEED = [
+  {name:"Alex Martinez",wk:[null,null,null,null,null],mtd:null},
+  {name:"Allen Lashbrook",wk:[null,null,null,null,null],mtd:null},
+  {name:"Andy Duenas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Brandon York",wk:[null,null,null,null,null],mtd:null},
+  {name:"Brett Brogan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Cesar Resendiz",wk:[null,null,null,null,null],mtd:null},
+  {name:"Chris Pope",wk:[null,null,null,null,null],mtd:null},
+  {name:"Craig Mueller",wk:[null,null,null,null,null],mtd:null},
+  {name:"Damon Dziekan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Dennis Murray",wk:[null,null,null,null,null],mtd:null},
+  {name:"Elijah Moreau",wk:[null,null,null,null,null],mtd:null},
+  {name:"Gerardo Calenda",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ian Sullivan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jacob Bogen",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jakub Kmiecik",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jason Lane",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jim Emberton",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jimmy Cruz",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jimmy Girardi",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joanna Guzman",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joel Argueta",wk:[null,null,null,null,null],mtd:null},
+  {name:"John Dubick",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jonathan Cruz",wk:[null,null,null,null,null],mtd:null},
+  {name:"Joshua Burton",wk:[null,null,null,null,null],mtd:null},
+  {name:"Kurt Grunden",wk:[null,null,null,null,null],mtd:null},
+  {name:"Luke Hughes",wk:[null,null,null,null,null],mtd:null},
+  {name:"Mark Minnis",wk:[null,null,null,null,null],mtd:null},
+  {name:"Mathew Moreland",wk:[null,null,null,null,null],mtd:null},
+  {name:"Michael Binstein",wk:[null,null,null,null,null],mtd:null},
+  {name:"Naveen Bobba",wk:[null,null,null,null,null],mtd:null},
+  {name:"Randy Morlan",wk:[null,null,null,null,null],mtd:null},
+  {name:"Richard Berrios",wk:[null,null,null,null,null],mtd:null},
+  {name:"Robert Doyle",wk:[null,null,null,null,null],mtd:null},
+  {name:"Robert McKinney",wk:[null,null,null,null,null],mtd:null},
+  {name:"Roberto Irizarry",wk:[null,null,null,null,null],mtd:null},
+  {name:"Ryan Kelly",wk:[null,null,null,null,null],mtd:null},
+  {name:"Sadie Orr",wk:[null,null,null,null,null],mtd:null},
+  {name:"Santino Patragas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Steve Thomas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Steven Frey",wk:[null,null,null,null,null],mtd:null},
+  {name:"Teresa Slepawic",wk:[null,null,null,null,null],mtd:null},
+  {name:"Tommy Deshazer",wk:[null,null,null,null,null],mtd:null},
+  {name:"Trey Shartzer",wk:[null,null,null,null,null],mtd:null},
+  {name:"Trichelle Thomas",wk:[null,null,null,null,null],mtd:null},
+  {name:"Zyan Kolesar",wk:[null,null,null,null,null],mtd:null}
+];
+const PROJ_SEED = [
+  {name:"Mathew Moreland",wk:[null,null,null,null,null],mtd:null},
+  {name:"Jimmy Girardi",wk:[null,null,null,null,null],mtd:null},
+  {name:"Earl Baker",wk:[null,null,null,null,null],mtd:null},
+  {name:"Nathaniel Knudtson",wk:[null,null,null,null,null],mtd:null},
+  {name:"John Broderick",wk:[null,null,null,null,null],mtd:null}
+];
+const CC_SEED = [
+  {name:"Carrie Gracey",wk:[[1.0, 0.54, 0.0389, 0.77],null,null,null,null],mtd:[1.0, 0.54, 0.0389, 0.77]},
+  {name:"Christopher Plant",wk:[[1.0, 0.52, 0.0278, 0.79],null,null,null,null],mtd:[1.0, 0.51, 0.0301, 0.83]},
+  {name:"Rose Zakrzewski-Beckmann",wk:[[1.0, 0.63, 0.0, 0.84],null,null,null,null],mtd:[1.0, 0.63, 0.0, 0.84]},
+  {name:"Vivian Smith",wk:[[1.0, 0.52, 0.0, 0.82],null,null,null,null],mtd:[1.0, 0.52, 0.0, 0.69]},
+  {name:"Zsahney Stanford",wk:[[1.0, 0.5, 0.0131, 0.83],null,null,null,null],mtd:[1.0, 0.49, 0.0182, 0.81]}
+];
+
+// column config: fmt 'pct'|'pct2'|'num'; head class; foot 'avg'|'sum'
+// full = FULL TARGET (team-sheet values, per Seong Aug 11); dir 'hi' (>=) | 'lo' (<=)
+// Bonus rule: metric attained ONLY at full target; >=2 attained pays $100/metric ($200/$300/$400), 0-1 pays $0
+const SC_CONFIG = {
+  collector: {seed:COLL_SEED, pfx:'coll', person:'Collector', cols:[
+    {label:'Effective<br>Utilization', fmt:'pct', head:'good-head', foot:'avg', full:0.825, dir:'hi'},
+    {label:'Normalized<br>Error Rate', fmt:'pct2', head:'err-head', foot:'avg', full:0.02, dir:'lo'},
+    {label:'Route Completion<br>Rate', fmt:'pct', head:'good-head', foot:'avg', full:0.98, dir:'hi'},
+    {label:'Daily Cash Movement &amp;<br>Reconciliation Met', fmt:'pct', head:'good-head', foot:'avg', full:1, dir:'hi'}]},
+  vault: {seed:VAULT_SEED, pfx:'vault', person:'Vault Tech', cols:[
+    {label:'Controllable Vault<br>Discrepancies', fmt:'num', head:'err-head', foot:'sum', full:1, dir:'lo'},
+    {label:'Discrepancies / Items in Vault<br>&gt;48 Hours', fmt:'num', head:'err-head', foot:'sum', full:3, dir:'lo'},
+    {label:'Vault<br>Balanced 100%', fmt:'pct', head:'good-head', foot:'avg', full:1, dir:'hi'},
+    {label:'Controllable Database<br>Corrections', fmt:'num', head:'err-head', foot:'sum', full:1, dir:'lo'}]},
+  technician: {seed:TECH_SEED, pfx:'tech', person:'Technician', cols:[
+    {label:'PMs + MCs Completed<br>vs Plan', fmt:'pct', head:'good-head', foot:'avg', full:0.9, dir:'hi'},
+    {label:'Effective<br>Utilization', fmt:'pct', head:'good-head', foot:'avg', full:0.825, dir:'hi'},
+    {label:'Avg On-Site Ticket<br>Completion (min)', fmt:'num', head:'warn-head', foot:'avg', full:10, dir:'lo'},
+    {label:'Attendance &amp;<br>Punctuality', fmt:'pct', head:'good-head', foot:'avg', full:0.975, dir:'hi'}]},
+  project: {seed:PROJ_SEED, pfx:'proj', person:'Project Tech', cols:[
+    {label:'Effective<br>Utilization', fmt:'pct', head:'good-head', foot:'avg', full:0.825, dir:'hi'},
+    {label:'On-Time Project<br>Completion', fmt:'pct', head:'good-head', foot:'avg', full:0.95, dir:'hi'},
+    {label:'Attendance &amp;<br>Punctuality', fmt:'pct', head:'good-head', foot:'avg', full:0.975, dir:'hi'},
+    {label:'Project Cycle<br>vs Plan', fmt:'pct', head:'warn-head', foot:'avg', full:0.85, dir:'lo'}]},
+  callcenter: {seed:CC_SEED, pfx:'cc', person:'Rep', cols:[
+    {label:'Attendance &amp;<br>Punctuality', fmt:'pct', head:'good-head', foot:'avg', full:0.975, dir:'hi'},
+    {label:'Remote<br>Fix Rate', fmt:'pct', head:'good-head', foot:'avg', full:0.57, dir:'hi'},
+    {label:'Abandonment<br>Rate', fmt:'pct2', head:'err-head', foot:'avg', full:0.02, dir:'lo'},
+    {label:'% Calls Answered<br>&lt;30s', fmt:'pct', head:'good-head', foot:'avg', full:0.95, dir:'hi'}]}
+};
+
+function fmtVal(v,f){return f==='pct'?pct(v,1):f==='pct2'?pct(v,2):num1(v);}
+function isHit(v,c){return v!==null&&v!==undefined&&(c.dir==='hi'?v>=c.full:v<=c.full);}
+function bonusFor(hits){return hits>=2?Math.min(hits,4)*100:0;}
+function renderScorecard(key,p){
+  const cfg=SC_CONFIG[key];
+  updatePeriodLabel(cfg.pfx,p);
+  const el=document.getElementById(cfg.pfx+'-body');
+  if(!cfg.cols.length||!cfg.seed.length){noData(el);return;}
+  const isMTD=p===5;
+  const rows=cfg.seed.map(s=>({name:s.name,d:(isMTD?s.mtd:s.wk[p])||[null,null,null,null]}));
+  rows.forEach(r=>{
+    r.hits=cfg.cols.reduce((a,c,i)=>a+(isHit(r.d[i],c)?1:0),0);
+    r.hasData=r.d.some(v=>v!==null&&v!==undefined);
+    r.bonus=bonusFor(r.hits);
+  });
+  if(isMTD) rows.sort((a,b)=>b.bonus-a.bonus||b.hits-a.hits||a.name.localeCompare(b.name));
+  else rows.sort((a,b)=>a.name.localeCompare(b.name));
+  let h=`<div class="table-wrap"><table><thead><tr class="col-header"><th>${cfg.person}</th>`;
+  for(const c of cfg.cols) h+=`<th class="${c.head}">${c.label}<br><span style="font-weight:400;opacity:0.75;">(target ${c.dir==='hi'?'&ge;':'&le;'} ${fmtVal(c.full,c.fmt==='pct2'?'pct':c.fmt)})</span></th>`;
+  if(isMTD) h+=`<th class="calc-head">Metrics Hit<br>(full target)</th><th class="calc-head">Projected<br>Monthly Bonus</th>`;
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    h+='<tr>'+`<td class="name-cell">${r.name}</td>`;
+    r.d.forEach((v,i)=>{
+      const hit=isHit(v,cfg.cols[i]);
+      h+=`<td class="num-cell${zc(v)}${hit?' hit':''}">${fmtVal(v,cfg.cols[i].fmt)}</td>`;
+    });
+    if(isMTD){
+      h+=`<td class="num-cell">${r.hasData?r.hits+' / '+cfg.cols.length:'\u2014'}</td>`;
+      h+=`<td class="num-cell bonus-cell${r.bonus?'':' zero'}">${r.hasData?'$'+r.bonus:'\u2014'}</td>`;
+    }
+    h+='</tr>';
+  }
+  h+='</tbody><tfoot><tr><td class="name-cell">'+(isMTD?'MTD ':'Team ')+'Average</td>';
+  cfg.cols.forEach((c,i)=>{
+    const vals=rows.map(r=>r.d[i]).filter(v=>v!==null&&v!==undefined);
+    let out='\u2014';
+    if(vals.length){
+      const agg=c.foot==='sum'?vals.reduce((a,b)=>a+b,0):vals.reduce((a,b)=>a+b,0)/vals.length;
+      out=fmtVal(agg,c.fmt);
+    }
+    h+=`<td>${out}</td>`;
+  });
+  if(isMTD){
+    const dr=rows.filter(r=>r.hasData);
+    h+=`<td>${dr.length?(dr.reduce((a,r)=>a+r.hits,0)/dr.length).toFixed(1):'\u2014'}</td>`;
+    h+=`<td>$${dr.reduce((a,r)=>a+r.bonus,0).toLocaleString()}</td>`;
+  }
+  h+='</tr></tfoot></table></div>';
+  el.innerHTML=h;
+}
+
+function selectScorecard(name,btn){
+  document.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.scorecard-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sc-'+name).classList.add('active');
+  if(name==='lastaudit'){renderLastAudit();return;}
+  renderScorecard(name,periods[name]);
+}
+function selectPeriod(sc,p,btn){
+  periods[sc]=p;
+  document.getElementById('sc-'+sc).querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderScorecard(sc,p);
+}
+
+const AUDIT_SEED = [["NYTLIFE ENTERTAINMENT, LLC - 230700978","NYTLIFE ENTERTAINMENT, LLC","230700978","Northern","South Chicago (South Burbs)","7/23/2026","NA","GL less than 30 days"],["ASTORIA TAVERN INC, ASTORIA - 220701378","ASTORIA TAVERN, INC.","220701378","Central","West IL","10/2/2025","NA","217+"],["LAFAYETTE MART, MACOMB - 240702856","LAFAYETTE MART , LLC","240702856","Central","West IL","2/18/2025","NA","217+"],["PAYSON CONVENIENCE QUICK STOP, PAYSON - 230703008","PAYSON CONVENIENCE QUICK STOP LLC","230703008","Central","West IL","6/17/2024","NA","217+"],["PANA COUNTRY CLUB, PANA - 220701164","PANA COUNTRY CLUB","220701164","Central","Central IL","5/23/2024","NA","217+"],["SAI AAYUSH KRIT, INC, MATTOON - 230701612","SAI AAYUSH KRIT, INC.","230701612","Central","Central IL","5/15/2024","NA","217+"],["BUSHNELL LIQUOR, BUSHNELL - 200702362","BUSHNELL DISCOUNT INC.","200702362","Central","West IL","5/6/2021","NA","217+"],["TAI PAN CHINESE, SPRINGFIELD - 180704605","TAI PAN CHINESE RESTAURANT INC.","180704605","Central","Central IL","2/13/2020","NA","217+"],["ANTIOCH LANES, ANTIOCH - 170703603","ANTIOCH LANES LLC","170703603","Northern","Lake Co (North Burbs)","8/1/2019","NA","217+"],["MISS KIMMEES, DECATUR - 170702824","MISS KIMMEES LLC","170702824","Central","Central IL","4/26/2018","NA","217+"],["JACKSONVILLE BEST BUFFET, JACKSONVILLE - 170701169","JACKSONVILLE BEST BUFFET INC.","170701169","Central","Central IL","6/14/2017","NA","217+"],["MELISTY MART, ORENA - 150702651","JASKARAN CONVENIENT STORE LLC","150702651","Central","Central IL","3/27/2017","NA","217+"],["MACON PETRO, MACON - 141002666","MACON PETROLEUM INC.","141002666","Central","Central IL","11/26/2014","NA","217+"],["SHELL, WATSEKA - 210700499","WATSEKA MART INC.","210700499","Northern","Central IL","12/2/2021","2/17/2026","170"],["AUGUSTA QUICK STOP, AUGUSTA - 220702376","AUGUSTA CONVENIENCE QUICK STOP INC","220702376","Central","West IL","6/26/2023","3/12/2026","147"],["STROUD LIQUORS, DANVILLE - 210700414","S.G.S FOOD & MART INC.","210700414","Central","Central IL","3/15/2022","3/24/2026","135"],["LUCKY LADYZ INC., DESOTO - 250702243","LUCKY LADYZ INC.","250702243","Southern","Southern IL","4/7/2026","NA","121"],["LEWISTOWN SMOKE SHOP LLC, LEWISTOWN - 250700742","LEWISTOWN SMOKE SHOP LLC","250700742","Central","West IL","8/21/2025","4/8/2026","120"],["THE DOCK ON FRONT STREET, MOKENA - 250702533","THE DOCK AT INWOOD LLC","250702533","Northern","South Chicago (South Burbs)","4/7/2026","4/16/2026","112"],["MAIN STREET TOWN INCORPORATED, ROUND LAKE PARK - 210701797","MAIN STREET TOWN INCORPORATED","210701797","Northern","Lake Co (North Burbs)","9/28/2021","4/21/2026","107"],["MATTESON BP INC, MATTESON - 250702272","MATTESON BP INC","250702272","Northern","South Chicago (South Burbs)","5/5/2026","4/22/2026","106"],["DELEON LLC, TAYLORVILLE - 250701696","DELEON LLC","250701696","Central","Central IL","2/18/2026","4/29/2026","99"],["FINDLAY FOOD MART, FINDLAY - 250700819","FINDLAY FOOD MART LLC","250700819","Central","Central IL","8/14/2025","4/29/2026","99"],["HENRY'S TACOS, JUSTICE - 160701633","HENRY'S TACOS, INC.","160701633","Northern","South Chicago (South Burbs)","11/10/2016","4/29/2026","99"],["BKCR FOOD & LIQUOR INC, DANVILLE - 230702910","BKCR FOOD & LIQUOR INC","230702910","Central","Central IL","6/24/2024","5/5/2026","93"],["PALOS LANES, PALOS HILLS - 120700324","ARENA ENTERPRISES, INC.","120700324","Northern","South Chicago (South Burbs)","10/27/2022","5/6/2026","92"],["VEGAS PLACE, DECATUR - 170702231","OM NAMAH SHIVAYA INC.,","170702231","Central","Central IL","5/3/2018","5/8/2026","90"],["ROKET STOP, INC., TAYLOR RIDGE - 240701056","ROKET STOP, INC.","240701056","Northern","West IL","10/24/2025","5/18/2026","80"],["KOREAN PRO BILLIARDS, NILES - 180700929","KOREAN PRO BILLIARDS, INC.","180700929","Northern","Lake Co (North Burbs)","10/29/2019","5/18/2026","80"],["MARIA'S MEXICAN GRILL, INC., SPRING GROVE - 210703233","MARIA'S MEXICAN GRILL, INC.","210703233","Northern","Lake Co (North Burbs)","7/29/2025","5/21/2026","77"],["GRAND TOBACCO, GALESBURG - 180701072","AMAR MART INC.","180701072","Central","West IL","11/8/2022","5/21/2026","77"],["STRIKETOWN BOWL, NORTH PEKIN - 120711749","JUST JACE INC.","120711749","Central","Central IL","9/30/2014","5/21/2026","77"],["SILVIS MART, SILVIS - 230700186","GET-N-GO, INC.","230700186","Northern","West IL","8/9/2023","5/25/2026","73"],["FOREMOST FOOD & LIQUOR, MELROSE PARK - 180703503","NIKOLAMARKO FOODS AND LIQUOR, INC.","180703503","Northern","Neenah (West Burbs)","8/22/2019","5/26/2026","72"],["FAMILY HOSPITALITY GROUP LLC, DECATUR - 250700141","FAMILY HOSPITALITY GROUP LLC","250700141","Central","Central IL","6/17/2025","5/27/2026","71"],["BURRITO GUACAMOLE INC., JOLIET - 250700627","BURRITO GUACAMOLE, INC.","250700627","Northern","Neenah (West Burbs)","6/4/2026","5/28/2026","70"],["ALL SAINTS INC, NEPONSET - 220702377","ALL SAINTS INC.","220702377","Central","West IL","10/2/2025","5/28/2026","70"],["G AND G VALLEY RIDGE LLC, ANTIOCH - 190703828","G AND G VALLEY RIDGE LLC","190703828","Northern","Lake Co (North Burbs)","5/1/2024","5/28/2026","70"],["LACEY'S, DOLTON - 160702433","LACEY'S PLACE LLC","160702433","Northern","South Chicago (South Burbs)","1/3/2017","5/29/2026","69"],["MARATHON, ALSIP - 190703587","ALSIP MARATHON, INC.","190703587","Northern","South Chicago (South Burbs)","1/8/2021","5/30/2026","68"],["LACEY'S, CRETE - 160700827","LACEY'S PLACE LLC","160700827","Northern","South Chicago (South Burbs)","6/13/2016","5/30/2026","68"],["THE WHITE HOUSE BREESE LLC, BREESE - 220703817","THE WHITE HOUSE BREESE, LLC","220703817","Southern","Southern IL","9/27/2023","6/2/2026","65"],["HAPPY HOUR SPORTS BAR, WATERLOO - 220702527","HAPPY HOUR SPORTS BAR, WATERLOO, LLC","220702527","Southern","Southern IL","12/18/2022","6/2/2026","65"],["DRAGON PALACE, TINLEY PARK - 160702802","DRAGON PALACE, INC.","160702802","Northern","South Chicago (South Burbs)","12/6/2017","6/2/2026","65"],["LACEY'S, STONE PARK - 160700414","LACEY'S PLACE LLC","160700414","Northern","Neenah (West Burbs)","5/12/2016","6/2/2026","65"],["DES PLAINES ELKS LODGE, DES PLAINES - 240802238","DES PLAINES LODGE NO. 1526, BENEVOLENT AND PROTECTIVE ORDER OF ELKS OF THE UNITED STATES OF AMERICA","240802238","Northern","Lake Co (North Burbs)","6/17/2025","6/3/2026","64"],["DIETERICH MART INC, DIETERICH - 230700829","DIETERICH MART INC","230700829","Southern","Southern IL","8/10/2023","6/3/2026","64"],["CASA CHAPALA, WHEELING - 170704152","CASA CHAPALA'S GRILL, INC.","170704152","Northern","Lake Co (North Burbs)","8/21/2018","6/3/2026","64"],["BUXTON'S LLC, BECKEMEYER - 230700364","BUXTONS, LLC","230700364","Southern","Southern IL","10/17/2023","6/5/2026","62"],["KGD GEGS LLC, TRENTON - 240702635","KGD GEGS LLC","240702635","Southern","Southern IL","2/20/2025","6/8/2026","59"],["ALY ANNE'S, DWIGHT - 170700340","ALY ANNE'S LLC","170700340","Northern","South Chicago (South Burbs)","6/19/2017","6/9/2026","58"],["LACEY'S, NORTH RIVERSIDE - 160700820","LACEY'S PLACE LLC","160700820","Northern","Neenah (West Burbs)","6/23/2016","6/9/2026","58"],["STATION 34, MT PROSPECT - 190700784","IRICK INVESTMENTS LLC","190700784","Northern","Lake Co (North Burbs)","10/23/2019","6/10/2026","57"],["BARRELBOUNTY SIP & SHOP, SPRING GROVE - 170702763","SHREE YAMUNE INC.","170702763","Northern","Lake Co (North Burbs)","7/5/2018","6/10/2026","57"],["FIRE HOUSE PIZZA, EAST PEORIA - 160703168","STATION 5 PIZZA INCORPORATED","160703168","Central","Central IL","1/5/2017","6/11/2026","56"],["DIAMONDS, CHAMPAIGN - 160702419","LACEY'S PLACE LLC","160702419","Central","Central IL","4/4/2017","6/15/2026","52"],["DIAMONDS, CENTRALIA - 160702337","LACEY'S PLACE LLC SERIES CENTRALIA","160702337","Southern","Southern IL","11/9/2016","6/15/2026","52"],["LACEY'S, URBANA - 150703012","LACEY'S PLACE LLC","150703012","Central","Central IL","10/14/2015","6/15/2026","52"],["ORCHARD GAMING CAFE, OSWEGO -  210703700","JAY KESAR GAMING INC.","210703700","Northern","Neenah (West Burbs)","9/7/2022","6/16/2026","51"],["PEPE'S, CRESTWOOD - 190704228","ANTGUEL, INC.","190704228","Northern","South Chicago (South Burbs)","2/22/2022","6/16/2026","51"],["MISS KIMMEES, SPRINGFIELD (ILES) - 190701778","MISS KIMMEES LLC","190701778","Central","Central IL","11/27/2019","6/16/2026","51"],["LACEY'S, MONEE - 160701171","LACEY'S PLACE LLC","160701171","Northern","South Chicago (South Burbs)","6/14/2016","6/16/2026","51"],["LACEY'S, SUMMIT - 150703775","LACEY'S PLACE LLC","150703775","Northern","South Chicago (South Burbs)","12/29/2015","6/17/2026","50"],["KEELEY'S PLACE, SPRINGFIELD - 210702359","SUPERIOR BUSINESS SOLUTIONS, INC.","210702359","Central","Central IL","2/8/2022","6/18/2026","49"],["LACEY'S, DECATUR (ELDORADO) - 150702345","LACEY'S PLACE LLC","150702345","Central","Central IL","10/13/2015","6/18/2026","49"],["LUCKY KNUTTS LLC, KEYESPORT - 250701480","LUCKY KNUTTS LLC","250701480","Southern","Southern IL","11/21/2025","6/19/2026","48"],["SORENTO FOOD MART LLC, SORENTO - 250700200","SORENTO FOOD MART LLC","250700200","Southern","Southern IL","8/14/2025","6/19/2026","48"],["KORTE MEAT PROCESSING INC, HIGHLAND - 240701250","KORTE MEAT PROCESSING INC","240701250","Southern","Southern IL","9/26/2024","6/19/2026","48"],["BLACK DIAMOND MART, SMITHTON - 240700427","BLACK DIAMOND MART, INC.","240700427","Southern","Southern IL","5/8/2024","6/19/2026","48"],["LACEY'S, BELLEVILLE - 220702850","LACEY'S PLACE LLC","220702850","Southern","Southern IL","2/21/2023","6/19/2026","48"],["THE BLUE ROOM, NEW MINDEN - 170701242","WEIHE NOT ENTERTAINMENT, INC.","170701242","Southern","Southern IL","9/19/2017","6/19/2026","48"],["NASH PARTNERS, LLC, CAROL STREAM - 240702821","Nash Partners","240702821","Northern","Neenah (West Burbs)","5/6/2026","6/22/2026","45"],["TKO SERVICES LLC, WAUKEGAN - 190702637","TKO SERVICES LLC","190702637","Northern","Lake Co (North Burbs)","10/11/2024","6/22/2026","45"],["BERRYFIELD CAFE, MIDLOTHIAN - 220700444","JNT RESTAURANT, INC.","220700444","Northern","South Chicago (South Burbs)","10/6/2022","6/22/2026","45"],["ROGERS MINI MART, ST. LIBORY - 200700015","ROGER'S MINI MART, L.L.C.","200700015","Southern","Southern IL","9/29/2020","6/22/2026","45"],["LACEY'S, CHAMPAIGN (NEIL) - 130704916","LACEY'S PLACE LLC","130704916","Central","Central IL","1/2/2019","6/22/2026","45"],["GLENNON BEHRMAN, ALBERS - 240702097","GLENNON BEHRMAN","240702097","Southern","Southern IL","3/26/2025","6/23/2026","44"],["FUZZ JAY & ZACH'S ACES & EIGHTS INC., NASHVILLE - 230702924","FUZZ JAY & ZACH'S ACES & EIGHTS - INC","230702924","Southern","Southern IL","6/18/2024","6/23/2026","44"],["SHELL, MERRIONETTE PARK-220702038","KEDZIE OIL INC.","220702038","Northern","South Chicago (South Burbs)","3/2/2023","6/23/2026","44"],["HOME-SLICE, HOMEWOOD - 210702213","A V COFFEE INC.","210702213","Northern","South Chicago (South Burbs)","12/1/2021","6/23/2026","44"],["EDDIES RISE N DINE, BREESE - 200702999","SDS STORES, INC.","200702999","Southern","Southern IL","7/29/2021","6/23/2026","44"],["SHELL, ALSIP - 190703588","ALSIP SIMPLE MART INC.","190703588","Northern","South Chicago (South Burbs)","8/11/2020","6/23/2026","44"],["LACEY'S, PLANO - 160702431","LACEY'S PLACE LLC","160702431","Northern","Neenah (West Burbs)","1/6/2017","6/23/2026","44"],["FORTUNES LLC, TRENTON - 240702603","FORTUNES LLC","240702603","Southern","Southern IL","5/6/2025","6/24/2026","43"],["LUCKY PENNY'S, THIRD LAKE - 180700255","PBRH THIRD LAKE LLC","180700255","Northern","Lake Co (North Burbs)","11/15/2018","6/24/2026","43"],["DEL CARMEN BLANCO WORTH INC., WORTH - 250702271","DEL CARMEN BLANCO WORTH INC., WORTH - 250702271","250702271","Northern","South Chicago (South Burbs)","6/25/2026","NA","42"],["OM KRISHNA 4 LLC, HERRIN - 250702263","OM KRISHNA 4 LLC","250702263","Southern","Southern IL","2/19/2026","6/25/2026","42"],["CARLIE LLC, ZEIGLER - 240702192","CARLIE LLC","240702192","Southern","Southern IL","3/25/2025","6/25/2026","42"],["HARBOR BREWING, LAKE VILLA - 220700240","HARBOR BREWING COMPANY, LLC","220700240","Northern","Lake Co (North Burbs)","8/10/2022","6/25/2026","42"],["BLACK DIAMOND ALL MART, MASCOUTAH - 190703917","BLACK DIAMOND MART, INC.","190703917","Southern","Southern IL","7/14/2020","6/25/2026","42"],["SWAMP TALES, CARLYLE - 160702032","ROBERT ENTERPRISES LLC","160702032","Southern","Southern IL","9/20/2016","6/25/2026","42"],["LUCKY BERNIE'S, SPRING GROVE - 160700896","CUHLIFE LLC SPRING GROVE","160700896","Northern","Lake Co (North Burbs)","6/16/2016","6/28/2026","39"],["PINBALL PALACE LLC, CARLYLE - 250700915","PINBALL PALACE LLC","250700915","Southern","Southern IL","11/21/2025","6/29/2026","38"],["ESSEX INN, ESSEX - 130705027","EDWARD FOLEY","130705027","Northern","South Chicago (South Burbs)","12/20/2024","6/29/2026","38"],["KEN'S FOOD & LIQUOR, HARVEY - 190700984","YOGI INVESTMENT GROUP, INC.","190700984","Northern","South Chicago (South Burbs)","12/9/2019","6/29/2026","38"],["DJR PROPERTIES, HIGHLAND - 250702603","DJR PROPERTIES, LLC","250702603","Southern","Southern IL","6/3/2026","6/30/2026","37"],["MISS KIMMEES BRADFORDTON, SPRINGFIELD - 230700877","MISS KIMMEES LLC","230700877","Central","Central IL","11/6/2023","6/30/2026","37"],["SIN CITY SLOTS AND CAFE, BECKEMEYER - 220703275","SIN CITY SLOTS AND CAFE LLC","220703275","Southern","Southern IL","2/22/2023","6/30/2026","37"],["SKY FOOD MART, WATSEKA - 200700326","SKY FOOD MART INC.,","200700326","Northern","Central IL","8/10/2020","6/30/2026","37"],["TEEPEE LIQUORS, NORTH CHICAGO - 190702274","RAHYL ENTERPRISES LIMITED","190702274","Northern","Lake Co (North Burbs)","2/11/2020","6/30/2026","37"],["SAVANNA FOOD MART INC, SAVANNA - 230702628","SAVANNA FOOD MART INC","230702628","Northern","Northwestern IL","10/23/2025","7/1/2026","36"],["MICKIE'S PIZZERIA, EAST PEORIA - 220700401","MICKIE'S PIZZERIA, INC.","220700401","Central","Central IL","9/27/2022","7/2/2026","35"],["SHELL, MARKHAM - 190703637","JOSH PETRO FOOD MART, INC.","190703637","Northern","South Chicago (South Burbs)","10/1/2020","7/2/2026","35"],["LACEY'S, MATTESON - 160700822","LACEY'S PLACE LLC","160700822","Northern","South Chicago (South Burbs)","9/19/2016","7/2/2026","35"],["STONEY'S GAMING LLC, SPRINGFIELD - 250702330","Stoney's Gaming, LLC","250702330","Central","Central IL","6/2/2026","7/3/2026","34"],["SZECHWAN PALACE, ANTIOCH - 220700797","RR&T MANAGEMENT","220700797","Northern","Lake Co (North Burbs)","3/1/2023","7/3/2026","34"],["LACEY'S PLACE, WHEATON - 230702992","KAYREH WHEATON, LLC","230702992","Northern","Neenah (West Burbs)","5/8/2024","7/4/2026","33"],["THE BLUE STORE 2, DANVILLE - 230700369","CITY LIQUOR INC.","230700369","Central","Central IL","7/3/2023","7/7/2026","30"],["LACEY'S, HIGHLAND - 160702338","LACEY'S PLACE LLC SERIES HIGHLAND","160702338","Southern","Southern IL","11/10/2016","7/7/2026","30"],["THE GARDEN FAMILY RESTAURANT, DECATUR - 150702416","THE GARDEN FAMILY RESTAURANT LLP","150702416","Central","Central IL","12/9/2015","7/8/2026","29"],["DALE MARSHALL INC, NEW WINDSOR - 120703322","DALE MARSHALL INC","120703322","Central","West IL","7/3/2024","7/9/2026","28"],["MARATHON, MARSHALL - 221000183","1803 N FOOD MART INC.","221000183","Central","Central IL","5/12/2022","7/9/2026","28"],["LACEY'S, ROBINSON - 170701355","LACEY'S PLACE LLC SERIES ROBINSON","170701355","Southern","Southern IL","7/17/2017","7/9/2026","28"],["POPS, LYONS - 160702361","REVL INC.","160702361","Northern","Neenah (West Burbs)","11/10/2016","7/10/2026","27"],["H & L LIQUOR, CARPENTERSVILLE - 180701424","AGORA LIQUORS, INC.","180701424","Northern","Lake Co (North Burbs)","11/1/2018","7/13/2026","24"],["HERMS DOLTON LLC, DOLTON - 260700923","HERMS DOLTON LLC","260700923","Northern","South Chicago (South Burbs)","6/22/2026","7/14/2026","23"],["S & T PETROLEUM INC., HANOVER - 240700090","S & T PETROLEUM INC","240700090","Northern","Northwestern IL","10/23/2025","7/14/2026","23"],["501 BLUES CLUB, HIGHLAND - 140700693","JEAN SCHELLENGER LLC","140700693","Southern","Southern IL","4/10/2025","7/14/2026","23"],["CHEERS CORNER, FULTON - 240701952","CHEERS CORNER INC","240701952","Northern","Northwestern IL","12/23/2024","7/14/2026","23"],["CONVENIENT FOODS, RIVER GROVE - 210701643","ANAMISH INC","210701643","Northern","Neenah (West Burbs)","9/23/2021","7/14/2026","23"],["LUCKY BERNIE'S, SOUTH CHICAGO HEIGHTS - 180702316","B2 & B2 LLC","180702316","Northern","South Chicago (South Burbs)","9/25/2019","7/14/2026","23"],["LACEY'S, MCHENRY - 170700001","LACEY'S PLACE LLC","170700001","Northern","Lake Co (North Burbs)","5/10/2017","7/14/2026","23"],["LACEY'S, BRADLEY - 160702432","LACEY'S PLACE LLC","160702432","Northern","South Chicago (South Burbs)","2/15/2017","7/14/2026","23"],["CATIE'S PLACE, RIVER GROVE - 160701532","CATIE'S PLACE, LLC","160701532","Northern","Neenah (West Burbs)","9/23/2016","7/14/2026","23"],["HUDDLE BAR & GRILL INC, CASEYVILLE - 230702452","HUDDLE BAR & GRILL INC","230702452","Southern","Southern IL","11/13/2024","7/15/2026","22"],["STATION 502, PANA - 180703221","STATION 502 LLC","180703221","Central","Central IL","1/29/2019","7/15/2026","22"],["HIDDEN KEYS VENTURES LLC, KEYESPORT - 260701175","Hidden Keys Ventures LLC","260701175","Southern","Southern IL","6/23/2026","7/15/2026","22"],["ZEIGLER PETRO, ZEIGLER - 150702194","ZEIGLER PETRO INC.","150702194","Southern","Southern IL","3/29/2017","7/15/2026","22"],["JAI MAA GROUP INC, MELROSE PARK - 250701052","JAI MAA GROUP INC, MELROSE PARK - 250701052","250701052","Northern","Neenah (West Burbs)","6/24/2026","7/16/2026","21"],["JP FOOD & LIQUOR, ABINGDON - 220701041","JP FOOD & LIQUOR , INC.","220701041","Central","West IL","9/28/2022","7/16/2026","21"],["ROUTE 66 KICK STAND, GRANITE CITY - 160702980","ROUTE 66 KICK STAND LLC","160702980","Southern","Southern IL","1/3/2017","7/17/2026","20"],["QUICK SHOP, CARPENTERSVILLE - 180701396","WAKEFIELD TOWN INC.","180701396","Northern","Lake Co (North Burbs)","6/25/2019","7/18/2026","19"],["PIZZA CUCINA, OSWEGO - 180701951","DANCINY ENTERPRISES, INC.","180701951","Northern","Neenah (West Burbs)","9/26/2018","7/18/2026","19"],["LAS FUENTES, MORTON GROVE - 190703071","LAS FUENTES, #4 INC.","190703071","Northern","Lake Co (North Burbs)","1/26/2021","7/18/2026","19"],["LACEY'S, MAYWOOD - 160702876","LACEY'S PLACE LLC","160702876","Northern","Neenah (West Burbs)","2/10/2017","7/18/2026","19"],["CHEMO'S PLACE, CICERO - 180702793","CHEMO'S PLACE INC.","180702793","Northern","Neenah (West Burbs)","10/6/2018","7/18/2026","19"],["TAQUERIA EL EDEN, BLUE ISLAND - 220701831","BMN GROUP INVESTMENT LLC","220701831","Northern","South Chicago (South Burbs)","12/19/2022","7/19/2026","18"],["DIAMONDS, CRESTWOOD - 160704051","RAJJB LLC","160704051","Northern","South Chicago (South Burbs)","3/7/2019","7/19/2026","18"],["FLANAGAN'S PUB, GRANT PARK - 220700958","FLANAGAN'S PUB, INC.","220700958","Northern","South Chicago (South Burbs)","5/12/2023","7/19/2026","18"],["MIDLOTHIAN MEMORIAL POST 2580, MIDLOTHIAN - 120900317","MIDLOTHIAN MEMORMIAL POST 2580, VETERANS OF FOREIGN WARS OF THE US, INC.","120900317","Northern","South Chicago (South Burbs)","2/10/2026","7/19/2026","18"],["LACEY'S PLACE LLC, CHAMPAIGN (503 W. TOWN) - 250700663","LACEY'S PLACE LLC","250700663","Central","Central IL","6/20/2025","7/20/2026","17"],["LUCKY'S SWEETS & SLOTS, GODFREY - 230700782","LUCKY'S SWEETS & SLOTS INC.","230700782","Southern","Southern IL","11/15/2023","7/20/2026","17"],["TEDDS BEVERAGE SHOP, HOOPESTON - 180700286","DNB FOOD & LIQUOR INC.","180700286","Central","Central IL","6/6/2018","7/21/2026","16"],["DIAMONDS, NORMAL (RAAB) - 150704455","LACEY'S PLACE LLC","150704455","Central","Central IL","2/18/2016","7/21/2026","16"],["MISS KIMMEES, SPRINGFIELD (DIRKSEN) - 170700646","MISS KIMMEES LLC","170700646","Central","Central IL","5/1/2017","7/21/2026","16"],["KENTUCKY BURN, SPRINGFIELD - 220701458","KENTUCKY BURN, INC.","220701458","Central","Central IL","9/27/2022","7/21/2026","16"],["MARATHON, HOOPESTON - 170704129","KIRPA PROPERTIES LLC","170704129","Central","Central IL","8/15/2018","7/21/2026","16"],["CATIE'S PLACE, NORTH RIVERSIDE - 170702441","CATIE'S PLACE, LLC","170702441","Northern","Neenah (West Burbs)","10/25/2017","7/21/2026","16"],["DIAMONDS, NORMAL (COLLEGE) - 160700594","LACEY'S PLACE LLC","160700594","Central","Central IL","5/11/2016","7/21/2026","16"],["LUCKY LUCY'S 7, FOX RIVER GROVE - 220700142","PSNDH GROVE INC.","220700142","Northern","Lake Co (North Burbs)","5/10/2022","7/22/2026","15"],["CONVENIENT QUICK STOP, GOLDEN - 170702322","GOLDEN CONVENIENT, LLC","170702322","Central","West IL","4/27/2018","7/22/2026","15"],["MIJOS AMF, LLC, FOX LAKE - 240700212","MIJOS AMF LLC","240700212","Northern","Lake Co (North Burbs)","1/3/2025","7/22/2026","15"],["CITGO, ALSIP - 210701554","5025 ALSIP, CORP.","210701554","Northern","South Chicago (South Burbs)","11/30/2021","7/22/2026","15"],["LACEY'S, MARKHAM - 160702421","LACEY'S PLACE LLC","160702421","Northern","South Chicago (South Burbs)","11/7/2016","7/22/2026","15"],["OLIVIA'S PLACE, BERWYN - 160701449","BLACKJACK'S GROUP INC","160701449","Northern","Neenah (West Burbs)","8/8/2016","7/22/2026","15"],["THE POUR HOUSE, MARISSA - 130702564","THE POUR HOUSE BAR & GRILL, INC.","130702564","Southern","Southern IL","1/8/2019","7/22/2026","15"],["LUCKY PENNY'S, JUSTICE - 160702875","LACEY'S PLACE LLC","160702875","Northern","South Chicago (South Burbs)","3/13/2017","7/22/2026","15"],["LUCKY PENNY'S, LINDENHURST 1 - 180700253","PBRH LINDENHURST LLC","180700253","Northern","Lake Co (North Burbs)","3/8/2019","7/22/2026","15"],["LUCKY BERNIE'S, WOODSTOCK - 160700897","CUHLIFE LLC WOODSTOCK","160700897","Northern","Lake Co (North Burbs)","6/21/2016","7/22/2026","15"],["RAMSEY CAFE, RAMSEY - 170703092","BOONDOCKS BAR & GRILL LLC","170703092","Central","Central IL","6/5/2018","7/22/2026","15"],["ROCKYS GAMING BAR LLC, NORTHLAKE - 180700578","ROCKYS GAMING BAR LLC","180700578","Northern","Neenah (West Burbs)","12/6/2024","7/22/2026","15"],["CHER'S RENDEZVOUS, LLC, BERWYN - 230701333","CHER'S RENDEZVOUS LLC","230701333","Northern","Neenah (West Burbs)","2/28/2024","7/22/2026","15"],["CHOPS FAMILY INN, ASHLEY - 120708138","Chops Family Inn","120708138","Southern","Southern IL","4/10/2025","7/22/2026","15"],["LACEY'S, KANKAKEE - 160702422","LACEY'S PLACE LLC","160702422","Northern","South Chicago (South Burbs)","11/7/2016","7/22/2026","15"],["LACEY'S, LOVES PARK - 210700301","STONE ACQUISITIONS LLC","210700301","Northern","Northwestern IL","11/8/2021","7/22/2026","15"],["LUCKY PENNY'S, CARY - 180700254","PBRH CARY LLC","180700254","Northern","Lake Co (North Burbs)","8/19/2019","7/22/2026","15"],["LACEY'S, RIVER GROVE - 160702399","B.O.D, CORP.,","160702399","Northern","Neenah (West Burbs)","11/8/2016","7/22/2026","15"],["JACKPOT JUNCTION 777 LLC, MARION - 250701977","JACKPOT JUNCTION 777 LLC","250701977","Southern","Southern IL","7/7/2026","7/23/2026","14"],["LACEY'S, ADDISON 2 - 160704096","LACEY'S PLACE LLC SERIES ADDISON 2","160704096","Northern","Neenah (West Burbs)","3/17/2017","7/23/2026","14"],["PHILLIPS 66, WATSEKA - 171001913","SMR MART, LLC","171001913","Northern","Central IL","8/15/2018","7/23/2026","14"],["AVA'S CAFE LLC, NORTH RIVERSIDE - 230700803","AVA'S CAFE LLC","230700803","Northern","Neenah (West Burbs)","2/7/2024","7/23/2026","14"],["STEPH'S PLACE, LINDENHURST - 200702833","GRAND LINDENHURST INC.,","200702833","Northern","Lake Co (North Burbs)","7/28/2021","7/23/2026","14"],["WOODHULL TRUCK PLAZA, LLC, WOODHULL - 221002394","WOODHULL TRUCK PLAZA LLC","221002394","Central","West IL","3/8/2024","7/23/2026","14"],["DIAMONDS, DECATUR - 150703820","DC HOLDINGS, LLC","150703820","Central","Central IL","2/9/2016","7/23/2026","14"],["ACCENTURE PARTNERS LLC, TROY - 240700100","ACCENTURE PARTNERS LLC","240700100","Southern","Southern IL","3/28/2024","7/23/2026","14"],["LACEY'S, ADDISON 1 - 160700946 WALSH SERIES","LACEY'S PLACE LLC SERIES ADDISON","160700946","Northern","Neenah (West Burbs)","6/17/2016","7/23/2026","14"],["MARATHON, OAK FOREST - 191000164","OAK FOREST MARATHON, INC.","191000164","Northern","South Chicago (South Burbs)","8/5/2021","7/23/2026","14"],["NOC NOC WOOD, CARPENTERSVILLE - 220703131","PRAMUKHRAJ INCORPORATED","220703131","Northern","Lake Co (North Burbs)","3/30/2023","7/24/2026","13"],["MISS KIMMEES, SPRINGFIELD (SANGAMON) - 180703965","MISS KIMMEES LLC","180703965","Central","Central IL","5/2/2019","7/24/2026","13"],["F.A. TAILGATORS, INC., OAK LAWN - 120706069","F.A. TAILGATORS, INC.","120706069","Northern","South Chicago (South Burbs)","4/7/2026","7/24/2026","13"],["SUNRISE SH INC, SLEEPY HOLLOW - 230703074","SUNRISE SH INC","230703074","Northern","Lake Co (North Burbs)","6/5/2024","7/24/2026","13"],["LACEY'S, MELROSE PARK - 160700275","B.O.D, CORP.,","160700275","Northern","Neenah (West Burbs)","5/12/2016","7/24/2026","13"],["CHINA DRAGON, ALGONQUIN - 170701581","CHINA DRAGON 1 INCORPORATED","170701581","Northern","Lake Co (North Burbs)","2/7/2018","7/24/2026","13"],["BP, RICHMOND - 190700263","RICHMOND PETROLEUM, INC.","190700263","Northern","Lake Co (North Burbs)","7/7/2020","7/24/2026","13"],["LUCKY BERNIE'S, HUNTLEY - 170700671","CUHLIFE LLC HUNTLEY","170700671","Northern","Lake Co (North Burbs)","7/20/2017","7/24/2026","13"],["ONESTOP LIQUOR & GROCERY, MELROSE PARK - 210701154","SAUMYA INC.","210701154","Northern","Neenah (West Burbs)","10/5/2021","7/24/2026","13"],["PEGGY'S DELI INC, HAZEL CREST - 240702501","PEGGY'S DELI INC.","240702501","Northern","South Chicago (South Burbs)","5/6/2025","7/24/2026","13"],["JALSA BAR AND RESTAURANT, CRYSTAL LAKE - 210703696","INDIAN CHATPATA SWAD INC.,","210703696","Northern","Lake Co (North Burbs)","9/13/2022","7/25/2026","12"],["LACEY'S, BRIDGEVIEW - 160700240","DAMASCHKE INTERNATIONAL INC.","160700240","Northern","South Chicago (South Burbs)","3/21/2016","7/25/2026","12"],["LUCKY CAFE, LOVES PARK - 190703786","401 E RIVERSIDE LLC","190703786","Northern","Northwestern IL","8/4/2022","7/25/2026","12"],["PORTER CULLEN'S, EVERGREEN PARK - 200702805","PORTER CULLEN\u201a\u00c4\u00f4S INC.","200702805","Northern","South Chicago (South Burbs)","3/22/2021","7/25/2026","12"],["EXXON, JUSTICE - 180702058","ETERNAL INC.","180702058","Northern","South Chicago (South Burbs)","2/21/2019","7/25/2026","12"],["SUNRISE FOOD & LIQUOR, HARVARD - 230701205","SUNRISE HARVARD INC","230701205","Northern","Northwestern IL","2/21/2024","7/25/2026","12"],["LUCKY PENNY'S, ROMEOVILLE - 160702423","LACEY'S PLACE LLC","160702423","Northern","Neenah (West Burbs)","7/21/2017","7/25/2026","12"],["HOBNOBBERS, SYCAMORE - 180700911","MKAZ VENTURES, LLC","180700911","Northern","Northwestern IL","3/1/2019","7/25/2026","12"],["LACEY'S, SOUTH ELGIN - 160701172","LACEY'S PLACE LLC","160701172","Northern","Neenah (West Burbs)","9/19/2016","7/25/2026","12"],["K & N MARKET & WINE - CHICAGO HEIGHTS - 210702102","TWO M'S UNITED INC.","210702102","Northern","South Chicago (South Burbs)","5/12/2022","7/25/2026","12"],["FIRESIDE GRILLE, SUGAR GROVE - 220702188","KMZ RESTAURANT GROUP, INC.","220702188","Northern","Neenah (West Burbs)","11/7/2022","7/26/2026","11"],["LUCKY PENNY'S, LAKE VILLA - 190702715","PBRH LAKE VILLA LLC","190702715","Northern","Lake Co (North Burbs)","7/7/2020","7/26/2026","11"],["LACEY'S, LYNWOOD - 160702427","LACEY'S PLACE LLC","160702427","Northern","South Chicago (South Burbs)","9/19/2016","7/26/2026","11"],["CRAB DU JOUR, MELROSE PARK - 230700676","CDJ OF MELROSE PARK IL LLC","230700676","Northern","Neenah (West Burbs)","5/1/2024","7/26/2026","11"],["THE TAPROOM, WAUKEGAN - 160701747","36 N GENESEE","160701747","Northern","Lake Co (North Burbs)","10/17/2023","7/26/2026","11"],["CATIE'S PLACE, WILLOWBROOK - 210702642","CATIE'S PLACE, LLC (WILLOWBROOK)","210702642","Northern","Neenah (West Burbs)","2/8/2022","7/26/2026","11"],["TNS CORPORATION, LAKEMOOR - 240702365","TNS CORPORATION","240702365","Northern","Lake Co (North Burbs)","3/24/2025","7/26/2026","11"],["FRANKS CORNER KITCHEN, BECKMEYER - 120701340","FRANK EUGENE COLSTON","120701340","Southern","Southern IL","11/2/2022","7/27/2026","10"],["LACEY'S, CHAMPAIGN (CROSSING/VILLAGE GREEN) - 150701466","LACEY'S PLACE LLC","150701466","Central","Central IL","8/13/2015","7/27/2026","10"],["LACEY'S, ROMEOVILLE - 160701173","LACEY'S PLACE LLC","160701173","Northern","Neenah (West Burbs)","8/23/2016","7/27/2026","10"],["LACEY'S, DECATUR (FRENCH QUARTERS) - 160700117","ISLAMOSKI & FAMILY, LLC","160700117","Central","Central IL","3/24/2016","7/27/2026","10"],["YE'S CHINESE, CAROL STREAM - 170700745","CLM CUISINE CORP.,","170700745","Northern","Neenah (West Burbs)","7/12/2018","7/28/2026","9"],["LACEY'S, CLINTON - 190703437","AXE GAMING LLC","190703437","Central","Central IL","7/1/2020","7/28/2026","9"],["ROADWAYS PLAZA, SPRINGFIELD -221003806","ROADWAYS PLAZA LLC","221003806","Central","Central IL","2/21/2023","7/28/2026","9"],["LA OFICINA BAR AND GAMING INC, COLLINSVILLE - 240700053","LA OFICINA BAR AND GAMING INC","240700053","Southern","Southern IL","11/13/2024","7/28/2026","9"],["MISS KIMMEES MOUNT ZION, DECATUR - 160701008","MISS KIMMEES LLC","160701008","Central","Central IL","5/12/2026","7/28/2026","9"],["LUCKY BERNIE'S, ANTIOCH - 180703730","CUHLIFE ANTIOCH LLC","180703730","Northern","Lake Co (North Burbs)","6/27/2019","7/28/2026","9"],["MI TIERRA, SHOREWOOD - 180700959","MI TIERRA BURRITO II INC.","180700959","Northern","Neenah (West Burbs)","8/13/2018","7/28/2026","9"],["MIRA'S CAFE, ELK GROVE VILLAGE - 180700983","JAS HOSPITALITY INC.","180700983","Northern","Neenah (West Burbs)","7/2/2021","7/28/2026","9"],["LUCKY PANDA, AURORA - 160703295","CHAN'S GOURMET INC.","160703295","Northern","Neenah (West Burbs)","2/8/2017","7/28/2026","9"],["LACEY'S, BEECHER - 160702877","LACEY'S PLACE LLC","160702877","Northern","South Chicago (South Burbs)","3/10/2017","7/28/2026","9"],["BUSHNELL FOOD MART, BUSHNELL - 180702120","BUSHNELL FOOD MART INC.","180702120","Central","West IL","11/13/2018","7/29/2026","8"],["LACEY'S, OSWEGO - 170703343","COOL CASH INC.","170703343","Northern","Neenah (West Burbs)","9/26/2018","7/29/2026","8"],["AHAC LLC, PINCKNEYVILLE - 190703380","AHAC LLC, PINCKNEYVILLE","190703380","Southern","Southern IL","8/7/2025","7/29/2026","8"],["LAKESIDE GAMING LLC, HERRIN - 250701875","LAKESIDE GAMING LLC","250701875","Southern","Southern IL","2/4/2026","7/29/2026","8"],["MARATHON, COWDEN - 210700102","COWDEN FOOD MART, LLC","210700102","Central","Central IL","7/28/2021","7/29/2026","8"],["LACEY'S, BERWYN OGDEN - 160702878","LACEY'S PLACE LLC","160702878","Northern","Neenah (West Burbs)","2/10/2017","7/29/2026","8"],["KENNEDY FRIED CHICKEN, DECATUR - 200702360","MANROOP, INC.","200702360","Central","Central IL","2/23/2021","7/29/2026","8"],["CENTENNIAL LANES, TINLEY PARK - 170703984","CENTENNIAL LANES 2.0 INC","170703984","Northern","South Chicago (South Burbs)","2/1/2023","7/30/2026","7"],["THE LINKS ON GRAND LLC, LINDENHURST - 240700870","THE LINKS ON GRAND, LLC","240700870","Northern","Lake Co (North Burbs)","9/27/2024","7/30/2026","7"],["LACEY'S, MIDLOTHIAN - 150704411","LACEY'S PLACE LLC","150704411","Northern","South Chicago (South Burbs)","2/18/2016","7/30/2026","7"],["UMIYA OGDEN LLC, OGDEN - 250702825","UMIYA OGDEN LLC","250702825","Central","Central IL","5/5/2026","7/30/2026","7"],["HAPPY GANG LLC, FOX LAKE - 220703436","HAPPY GANG LLC","220703436","Northern","Lake Co (North Burbs)","1/2/2024","7/30/2026","7"],["SCOTCHMONS EAST, WATSEKA - 190702007","OHMNETRA INC.","190702007","Northern","Central IL","12/2/2019","7/30/2026","7"],["MOBIL, SUMMIT - 180701869","CTJM ONE REAL ESTATE INC.","180701869","Northern","South Chicago (South Burbs)","11/15/2018","7/30/2026","7"],["T & M RAILSHAKE INC., HIGHLAND - 230702607","T&M Railshake Inc.","230702607","Southern","Southern IL","7/2/2024","7/31/2026","6"],["SUN CATCHERS TAN, INC., WOOD RIVER - 240701195","SUN CATCHERS TAN, INC.","240701195","Southern","Southern IL","12/26/2024","7/31/2026","6"],["ATS A NICE PIZZA, ROMEOVILLE - 200700457","C & B ENTERPRISES, INC.","200700457","Northern","Neenah (West Burbs)","2/18/2021","7/31/2026","6"],["MISS KIMMEES, SPRINGFIELD (DURKIN) - 140701648","MISS KIMMEES LLC","140701648","Central","Central IL","7/14/2022","7/31/2026","6"],["JAR FOOD MART INC., MCHENRY - 250700870","JAR FOOD MART INC","250700870","Northern","Lake Co (North Burbs)","11/19/2025","7/31/2026","6"],["CITGO, ELMWOOD PARK - 200701194","PB FOOD MART INC.","200701194","Northern","Neenah (West Burbs)","12/29/2020","7/31/2026","6"],["LACEY'S, LAKE ZURICH - 160700821","LACEY'S PLACE LLC","160700821","Northern","Lake Co (North Burbs)","5/18/2016","7/31/2026","6"],["MISS KIMMEES (GRAND), SPRINGFIELD - 140702418","MISS KIMMEES LLC","140702418","Central","Central IL","10/22/2024","7/31/2026","6"],["BRAIDKOT LTD, BRAIDWOOD - 240701819","BERKOT LTD","240701819","Northern","South Chicago (South Burbs)","11/6/2024","8/1/2026","5"],["BP, HOMETOWN - 200700635","MD GAMING LLC","200700635","Northern","South Chicago (South Burbs)","8/14/2020","8/1/2026","5"],["VEGAS PLACE, RANTOUL - 150700230","OHM SHANTI CORP.,","150700230","Central","Central IL","9/15/2015","8/3/2026","3"],["LACEY'S, DECATUR (WATER) - 160702420","LACEY'S PLACE LLC","160702420","Central","Central IL","4/3/2017","8/3/2026","3"],["D'S WESTSIDE LOUNGE, CARLYLE - 230700827","D'S WESTSIDE LOUNGE, LLC","230700827","Southern","Southern IL","9/27/2023","8/5/2026","1"]];
+const AUDIT_ASOF = "Aug 5, 2026";
+const REGION_SUMMARY = [["Northern",138,89,0.6449],["Central",63,31,0.4921],["Southern",44,19,0.4318]];
+let laRegion = 'All';
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function selectRegion(r,btn){
+  laRegion=r;
+  document.getElementById('sc-lastaudit').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderLastAudit();
+}
+function renderLastAudit(){
+  if(laRegion==='Summary'){
+    document.getElementById('la-title').innerHTML='Last Audit &mdash; Region Summary';
+    document.getElementById('la-sub').textContent='Audit compliance by region \u00b7 as of '+AUDIT_ASOF;
+    let tl=0,tc=0;
+    let h=`<div class="table-wrap"><table>
+      <thead><tr class="col-header">
+        <th style="text-align:left;">Region</th>
+        <th>Total<br>Locations</th>
+        <th>Total Audit Compliant<br>Locations</th>
+        <th class="calc-head">Compliant %</th>
+      </tr></thead><tbody>`;
+    for(const r of REGION_SUMMARY){
+      tl+=r[1];tc+=r[2];
+      h+=`<tr><td style="text-align:left;">${esc(r[0])}</td><td>${n(r[1])}</td><td>${n(r[2])}</td><td class="calc-cell">${pct(r[3],1)}</td></tr>`;
+    }
+    h+=`</tbody><tfoot><tr><td class="name-cell" style="text-align:left;">Total</td><td>${n(tl)}</td><td>${n(tc)}</td><td>${pct(tl>0?tc/tl:0,1)}</td></tr></tfoot></table></div>`;
+    document.getElementById('la-body').innerHTML=h;
+    return;
+  }
+  const rows=laRegion==='All'?AUDIT_SEED:AUDIT_SEED.filter(r=>r[3]===laRegion);
+  document.getElementById('la-title').innerHTML='Last Audit &mdash; '+(laRegion==='All'?'All Regions':laRegion+' Region');
+  document.getElementById('la-sub').textContent=rows.length+' locations \u00b7 as of '+AUDIT_ASOF;
+  let h=`<div class="table-wrap"><table>
+    <thead><tr class="col-header">
+      <th style="text-align:left;">Location Name</th>
+      <th style="text-align:left;">Corporation Name</th>
+      <th>Location<br>License</th>
+      <th>Region<br>Name</th>
+      <th style="text-align:left;">New Region</th>
+      <th>GL Date</th>
+      <th>Last Audit<br>Date in 2026</th>
+      <th class="err-head">Days Since<br>Last Audit</th>
+    </tr></thead><tbody>`;
+  for(const r of rows){
+    const days=r[7], flag=String(days).endsWith('+'), na=(r[6]===''||r[6]==='NA');
+    h+=`<tr>
+      <td style="text-align:left;">${esc(r[0])}</td>
+      <td style="text-align:left;">${esc(r[1])}</td>
+      <td>${esc(r[2])}</td>
+      <td>${esc(r[3])}</td>
+      <td style="text-align:left;">${esc(r[4])}</td>
+      <td>${esc(r[5])}</td>
+      <td${na?' class="zero"':''}>${na?'\u2014':esc(r[6])}</td>
+      <td${flag?' style="color:#c0392b;font-weight:600;"':''}>${esc(days)}</td>
+    </tr>`;
+  }
+  h+=`</tbody></table></div>`;
+  document.getElementById('la-body').innerHTML=h;
+}
+renderScorecard('collector',0);
+</script>
+</body>
+</html>
